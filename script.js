@@ -10,10 +10,13 @@ newEl.classList.add("newEl");
 const highScore = document.createElement("div");
 highScore.classList.add("newEl");
 
-let i = 0;
-let temp;
+const reset = document.createElement("button");
+reset.classList.add("newEl")
 
-if (localStorage.getItem("myHighscore") === null) {
+let i = 0;
+let temp = 0;
+
+if (localStorage.getItem("myHighscore") === null || Infinity) {
   temp = 0;
 } else {
   temp = parseInt(localStorage.getItem("myHighscore"));
@@ -68,6 +71,13 @@ quoteInputElement.addEventListener("input", () => {
 
     newEl.innerText = "Gross WPM: " + grossWPM;
     alsoFlex.appendChild(newEl);
+
+    reset.innerText = "Reset Highscore"
+    alsoFlex.appendChild(reset)
+    reset.addEventListener("click", ()=>{
+      localStorage.setItem("myHighscore", "0")
+      highScore.innerText = "Highscore: " + localStorage.getItem("myHighscore");
+    });
 
     renderNextQuote();
   }
