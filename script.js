@@ -50,7 +50,7 @@ quoteInputElement.addEventListener("input", () => {
       characterSpan.classList.add("incorrect");
       correct = false;
 
-      quoteInputElement.setAttribute("maxlength", index);
+      quoteInputElement.setAttribute("maxlength", index = 1);
     }
   });
 
