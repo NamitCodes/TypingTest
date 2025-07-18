@@ -1,27 +1,38 @@
-const RANDOM_QUOTE_API_URL = "https://api.quotable.io/random";
 const quoteDisplayElement = document.getElementById("quoteDisplay");
 const quoteInputElement = document.getElementById("quoteInput");
 const timerElement = document.getElementById("timer");
 const alsoFlex = document.getElementById("alsoFlex");
 
-const newEl = document.createElement("div");
-newEl.classList.add("newEl");
-
+// Create highscore display, WPM display, and reset button once
 const highScore = document.createElement("div");
-highScore.classList.add("newEl");
-
+const newEl = document.createElement("div");
 const reset = document.createElement("button");
-reset.classList.add("newEl")
+
+highScore.classList.add("newEl");
+newEl.classList.add("newEl");
+reset.classList.add("newEl");
+
+let temp = parseInt(localStorage.getItem("myHighscore")) || 0;
+highScore.innerText = "Highscore: " + temp;
+reset.innerText = "Reset Highscore";
+
+// Append once at start
+alsoFlex.appendChild(highScore);
+alsoFlex.appendChild(newEl);
+alsoFlex.appendChild(reset);
+
+reset.addEventListener("click", () => {
+  localStorage.setItem("myHighscore", "0");
+  temp = 0;
+  highScore.innerText = "Highscore: 0";
+  newEl.innerText = "Gross WPM: 0";
+});
 
 let i = 0;
-let temp = 0;
+let timerInterval;
+let startTime;
 
-if (localStorage.getItem("myHighscore") === null || Infinity) {
-  temp = 0;
-} else {
-  temp = parseInt(localStorage.getItem("myHighscore"));
-}
-
+// Typing input listener
 quoteInputElement.addEventListener("input", () => {
   i += 1;
   if (i === 1) {
@@ -38,97 +49,78 @@ quoteInputElement.addEventListener("input", () => {
     if (character == null) {
       characterSpan.classList.remove("correct");
       characterSpan.classList.remove("incorrect");
-
       correct = false;
     } else if (character === characterSpan.innerText) {
       characterSpan.classList.add("correct");
       characterSpan.classList.remove("incorrect");
-
-      quoteInputElement.setAttribute("maxlength", index + 2);
     } else {
       characterSpan.classList.remove("correct");
       characterSpan.classList.add("incorrect");
       correct = false;
-
-      quoteInputElement.setAttribute("maxlength", index = 1);
     }
   });
 
   if (correct) {
-    grossWPM = Math.round(i / 5 / (timerElement.innerText / 60));
+    const timeInSeconds = parseInt(timerElement.innerText);
+    const grossWPM = timeInSeconds > 0 ? Math.round(i / 5 / (timeInSeconds / 60)) : 0;
 
-    highScore.innerText = "Highscore: " + temp;
-    alsoFlex.appendChild(highScore);
+    newEl.innerText = "Gross WPM: " + grossWPM;
 
-    if (temp < grossWPM) {
-      highScore.innerText = "Highscore: " + grossWPM;
-      // alsoFlex.appendChild(highScore);
+    if (grossWPM > temp) {
       temp = grossWPM;
+      highScore.innerText = "Highscore: " + temp;
       localStorage.setItem("myHighscore", temp.toString());
     }
 
-    // console.log("Gross WPM:", grossWPM);
-
-    newEl.innerText = "Gross WPM: " + grossWPM;
-    alsoFlex.appendChild(newEl);
-
-    reset.innerText = "Reset Highscore"
-    alsoFlex.appendChild(reset)
-    reset.addEventListener("click", ()=>{
-      localStorage.setItem("myHighscore", "0")
-      highScore.innerText = "Highscore: " + localStorage.getItem("myHighscore");
-    });
-
+    clearInterval(timerInterval);
     renderNextQuote();
   }
 });
 
+// Fetch a random quote (returns Promise<string>)
 function getRandomQuote() {
-  // return fetch(RANDOM_QUOTE_API_URL)
-  $.ajax({
+  return fetch('https://api.api-ninjas.com/v1/quotes', {
     method: 'GET',
-    url: 'https://api.api-ninjas.com/v1/quotes',
-    headers: { 'X-Api-Key': 'TWix4JwG0yE6OCqkwMcjzg==SdvTU6eojjdpf5p0'},
-    contentType: 'application/json',
-    success: function(result) {
-        console.log(result);
-    },
-    error: function ajaxError(jqXHR) {
-        console.error('Error: ', jqXHR.responseText);
-    }
-});
-    .then((response) => response.json())
-    .then((data) => data.content);
+    headers: { 'X-Api-Key': 'TWix4JwG0yE6OCqkwMcjzg==SdvTU6eojjdpf5p0' }
+  })
+    .then(response => response.json())
+    .then(data => data[0].quote)
+    .catch(error => {
+      console.error('Error:', error);
+      return "Failed to fetch quote. Try again.";  // Fallback quote
+    });
 }
 
+// Display a new quote
 async function renderNextQuote() {
   i = 0;
+  quoteInputElement.value = "";
+  timerElement.innerText = "0";
+  clearInterval(timerInterval);
 
   const quote = await getRandomQuote();
-  // console.log(quote);
   quoteDisplayElement.innerHTML = "";
+
   quote.split("").forEach((character) => {
     const characterSpan = document.createElement("span");
     characterSpan.innerText = character;
     quoteDisplayElement.appendChild(characterSpan);
   });
-  // word = quote.split(" ").length
-  quoteInputElement.value = null;
 }
 
-let startTime;
+// Timer functions
 function startTimer() {
+  clearInterval(timerInterval);
   timerElement.innerText = 0;
   startTime = new Date();
-  setInterval(() => {
+  timerInterval = setInterval(() => {
     timerElement.innerText = getTimerTime();
   }, 1000);
 }
 
 function getTimerTime() {
-  return i === 0
-    ? timerElement.innerText
-    : Math.floor((new Date() - startTime) / 1000);
+  return Math.floor((new Date() - startTime) / 1000);
 }
 
+// Start the first quote
 renderNextQuote();
