@@ -84,7 +84,19 @@ quoteInputElement.addEventListener("input", () => {
 });
 
 function getRandomQuote() {
-  return fetch(RANDOM_QUOTE_API_URL)
+  // return fetch(RANDOM_QUOTE_API_URL)
+  $.ajax({
+    method: 'GET',
+    url: 'https://api.api-ninjas.com/v1/quotes',
+    headers: { 'X-Api-Key': 'TWix4JwG0yE6OCqkwMcjzg==SdvTU6eojjdpf5p0'},
+    contentType: 'application/json',
+    success: function(result) {
+        console.log(result);
+    },
+    error: function ajaxError(jqXHR) {
+        console.error('Error: ', jqXHR.responseText);
+    }
+});
     .then((response) => response.json())
     .then((data) => data.content);
 }
